@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Master - A Fun Card Matching Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="cssfile_mindgame.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🧠 Memory Master</h1>
+            <div class="game-info">
+                <div class="stat-box">
+                    <i class="fas fa-stopwatch"></i>
+                    <span id="time">00:00</span>
+                </div>
+                <div class="stat-box">
+                    <i class="fas fa-star"></i>
+                    <span id="score">0</span>
+                </div>
+                <div class="stat-box">
+                    <i class="fas fa-trophy"></i>
+                    <span id="best-time">Best: --:--</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-controls">
+            <button id="start-game" class="glow-button">
+                <i class="fas fa-play"></i> Start Game
+            </button>
+            <div class="difficulty-selector">
+                <button class="diff-btn active" data-diff="easy">Easy</button>
+                <button class="diff-btn" data-diff="medium">Medium</button>
+                <button class="diff-btn" data-diff="hard">Hard</button>
+            </div>
+        </div>
+
+        <div class="memory-game" id="memory-game">
+            <!-- Cards will be added here by JavaScript -->
+        </div>
+
+        <!-- High Score Board -->
+        <div class="high-score-board" id="high-score-board">
+            <h2>🏆 High Scores</h2>
+            <div class="score-tabs">
+                <button class="score-tab active" data-diff="easy">Easy</button>
+                <button class="score-tab" data-diff="medium">Medium</button>
+                <button class="score-tab" data-diff="hard">Hard</button>
+            </div>
+            <div class="score-list" id="score-list">
+                <!-- High scores will be added here by JavaScript -->
+            </div>
+        </div>
+
+        <div id="celebration"></div>
+    </div>
+
+    <!-- Player Name Modal -->
+    <div class="modal" id="name-modal">
+        <div class="modal-content">
+            <h2>🎉 New High Score!</h2>
+            <p>Enter your name:</p>
+            <input type="text" id="player-name" maxlength="20" placeholder="Your Name">
+            <button id="save-score" class="glow-button">Save Score</button>
+        </div>
+    </div>
+
+    <script src="jsfile_mindgame.js"></script>
+</body>
+</html> 
