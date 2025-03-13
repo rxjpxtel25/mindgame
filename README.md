@@ -1,0 +1,2 @@
+# mindgame
+mindgame_fungame
