@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let isPlaying = false;
     let pendingScore = null;
+    let isChecking = false;
 
     const emojis = {
         easy: ['🎮', '🎲', '🎯', '🎨', '🎭', '🎪'],
@@ -40,13 +41,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveHighScore(difficulty, name, score, time) {
-        const scores = getHighScores(difficulty);
+        let scores = getHighScores(difficulty);
         const newScore = { name, score, time, date: Date.now() };
-        scores.push(newScore);
-        scores.sort((a, b) => b.score - a.score || a.time - b.time);
-        const topScores = scores.slice(0, 10);
-        localStorage.setItem(`highScores_${difficulty}`, JSON.stringify(topScores));
-        displayHighScores(difficulty);
+        
+        if (scores.length < 10 || score > scores[scores.length - 1].score || 
+            (score === scores[scores.length - 1].score && time < scores[scores.length - 1].time)) {
+            scores.push(newScore);
+            scores.sort((a, b) => b.score - a.score || a.time - b.time);
+            scores = scores.slice(0, 10);
+            localStorage.setItem(`highScores_${difficulty}`, JSON.stringify(scores));
+            displayHighScores(difficulty);
+        }
     }
 
     function displayHighScores(difficulty) {
@@ -67,14 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTimer() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        if (timeLeft === 0) {
+        if (timeLeft > 0) {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
             endGame(false);
         }
-        timeLeft--;
     }
 
     function createCard(emoji) {
@@ -88,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function flipCard(card) {
-        if (!isPlaying || flippedCards.length >= 2 || card.classList.contains('flipped') || card.classList.contains('matched')) {
+        if (!isPlaying || flippedCards.length >= 2 || isChecking || card.classList.contains('flipped') || card.classList.contains('matched')) {
             return;
         }
         
@@ -96,7 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
         flippedCards.push(card);
         
         if (flippedCards.length === 2) {
-            checkMatch();
+            isChecking = true;
+            setTimeout(checkMatch, 800);
         }
     }
 
@@ -126,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             score = Math.max(0, score - 5);
             scoreDisplay.textContent = score;
         }
+        isChecking = false;
     }
 
     function celebrate() {
@@ -158,6 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentTime < bestTime) {
                 localStorage.setItem(`bestTime_${currentDifficulty}`, currentTime);
                 bestTimeDisplay.textContent = `Best: ${Math.floor(currentTime / 60)}:${(currentTime % 60).toString().padStart(2, '0')}`;
+                
+                // Also update the specific difficulty best time display
+                const diffBestTimeElement = document.getElementById(`best-time-${currentDifficulty}`);
+                if (diffBestTimeElement) {
+                    diffBestTimeElement.textContent = `Best: ${Math.floor(currentTime / 60)}:${(currentTime % 60).toString().padStart(2, '0')}`;
+                }
             }
 
             // Check if score qualifies for high scores
@@ -207,7 +220,16 @@ document.addEventListener('DOMContentLoaded', () => {
             diffButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             currentDifficulty = button.dataset.diff;
-            if (isPlaying) startGame();
+            
+            // Update the main best time display for the new difficulty
+            const bestTime = localStorage.getItem(`bestTime_${currentDifficulty}`);
+            if (bestTime) {
+                bestTimeDisplay.textContent = `Best: ${Math.floor(bestTime / 60)}:${(bestTime % 60).toString().padStart(2, '0')}`;
+            } else {
+                bestTimeDisplay.textContent = 'Best: --:--';
+            }
+            
+            startGame(); // Reset game on difficulty change
         });
     });
 
@@ -231,9 +253,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     playerNameInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            saveScoreButton.click();
+            const name = playerNameInput.value.trim();
+            if (name && pendingScore) {
+                saveScoreButton.click();
+            }
         }
     });
+
+    // Function to load best times for all difficulties
+    function loadBestTimes() {
+        Object.keys(difficulties).forEach(difficulty => {
+            const bestTime = localStorage.getItem(`bestTime_${difficulty}`);
+            const bestTimeElement = document.getElementById(`best-time-${difficulty}`);
+            
+            if (bestTime && bestTimeElement) {
+                bestTimeElement.textContent = `Best: ${Math.floor(bestTime / 60)}:${(bestTime % 60).toString().padStart(2, '0')}`;
+            } else if (bestTimeElement) {
+                bestTimeElement.textContent = "No Best Time";
+            }
+            
+            // Also update the main best time display for the current difficulty
+            if (difficulty === currentDifficulty && bestTime) {
+                bestTimeDisplay.textContent = `Best: ${Math.floor(bestTime / 60)}:${(bestTime % 60).toString().padStart(2, '0')}`;
+            }
+        });
+    }
+
+    // Load best times on page load
+    loadBestTimes();
 
     // Initialize high scores display
     displayHighScores('easy');
